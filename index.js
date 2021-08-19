@@ -4,6 +4,9 @@ const cors = require("cors");
 const connectDb = require("./db/db");
 require("dotenv").config();
 
+//* Route imports
+const teams = require("./routes/teams");
+
 //* Creating an instance of the Express app
 const app = express();
 
@@ -13,6 +16,7 @@ connectDb();
 //* Using middleware (CORS and Express' built in JSON body parser)
 app.use(cors());
 app.use(express.json());
+app.use("/api/teams", teams);
 
 //* Defining the PORT our server will run on using an environmental variable or default value
 const port = process.env.PORT || 5000;
