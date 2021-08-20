@@ -164,6 +164,7 @@ router.delete("/:teamId/players/:playerId", async (req, res) => {
     if (!team) return res.status(400).send(`Team not found!: ${error}`);
 
     // Using the special "id" subdocument method to find a specific player by _id
+    // Then calling the "remove()" method to remove it. This returns the subdocument removed
     let player = team.players.id(req.params.playerId).remove();
     if (!player) return res.status(400).send(`Player not found!`);
 

@@ -7,6 +7,7 @@ const playerSchema = new mongoose.Schema({
   rating: { type: Number, required: true },
 });
 
+//* Adding Joi validation method to the "methods" object built into the Schema
 playerSchema.methods.playerValidate = (player) => {
   const schema = Joi.object({
     firstName: Joi.string().min(1).max(50).required(),
@@ -34,6 +35,8 @@ teamSchema.methods.teamValidate = (team) => {
 const Player = mongoose.model("Player", playerSchema);
 const Team = mongoose.model("Team", teamSchema);
 
+//* shorthand properties will add keys to match values
+//* Equivalent of saying Player: Player and Team: Team
 module.exports = {
   Player,
   Team,
