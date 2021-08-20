@@ -9,8 +9,8 @@ const playerSchema = new mongoose.Schema({
 
 playerSchema.methods.playerValidate = (player) => {
   const schema = Joi.object({
-    firstName: Joi.string().min(6).max(50).required(),
-    lastName: Joi.string().min(6).max(50).required(),
+    firstName: Joi.string().min(1).max(50).required(),
+    lastName: Joi.string().min(1).max(50).required(),
     rating: Joi.number().required(),
   });
   return schema.validate(player);

@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { Team } = require("../models/team");
+const { Team, Player } = require("../models/team");
 
 //* Team Endpoints
+
+// GET all teams in collection
 router.get("/", async (req, res) => {
   try {
     let teams = await Team.find();
@@ -10,42 +12,166 @@ router.get("/", async (req, res) => {
 
     return res.status(200).send(teams);
   } catch (error) {
-    return res.status(500).send(`Internal Server Error: ${err}`);
+    return res.status(500).send(`Internal Server Error: ${error}`);
   }
 });
 
-//TODO: GET team by :id
+// GET a single team by ObjectId
+router.get("/:teamId", async (req, res) => {
+  try {
+    let team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(400).send(`Team not found!: ${error}`);
+    return res.status(200).send(team);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
+  }
+});
 
+// POST a single team
 router.post("/", async (req, res) => {
   try {
-    let team = {
+    const team = {
       name: req.body.name,
       city: req.body.city,
       players: [],
     };
-    //TODO: check to see if team already exists using a helper function
-
-    let newTeam = new Team({ team });
-    let { error } = newTeam.teamValidate(team);
-    if (error) return res.status(400).send(`Body not valid: ${error}`);
-    let teamExists = Team.exists({ name: team.name });
-    if (teamExists)
-      return res.status(400).send(`Team ${team.name} already exists!`);
+    let newTeam = new Team(team); // create new Team model using team object
+    let { error } = newTeam.teamValidate(team); // call built in validate method to run Joi validation
+    if (error) return res.status(400).send(`Body not valid: ${error}`); // if an error is found, send failed response
     await newTeam.save();
     return res.send(newTeam);
-  } catch (err) {
-    return res.status(500).send(`Internal Server Error: ${err}`);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
   }
 });
 
-//TODO: PUT team by :id
-//TODO: DELETE team by :id
+// PUT team by :id
+router.put("/:teamId", async (req, res) => {
+  try {
+    let update = {
+      name: req.body.name,
+      city: req.body.city,
+    };
+    let team = await Team.findByIdAndUpdate(req.params.teamId, update, {
+      new: true,
+    });
+    if (!team) return res.status(400).send(`Team not found!`);
+
+    return res.send(team);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
+  }
+});
+
+// DELETE team by :id
+router.delete("/:teamId", async (req, res) => {
+  try {
+    let team = await Team.findByIdAndDelete(req.params.teamId);
+    if (!team) return res.status(400).send(`Team not found!`);
+    return res.status(200).send(team);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
+  }
+});
 
 //* Player Endpoints
-//TODO: GET all players by :teamId
-//TODO: POST new player to team by :teamId
-//TODO: GET player by :playerId from team by :teamId
-//TODO: PUT player by :playerId from team by :teamId
-//TODO: DELETE player by :playerId from team by :teamId
+
+// GET all players by :teamId
+router.get("/:teamId/players", async (req, res) => {
+  try {
+    let team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(400).send(`Team not found!: ${error}`);
+
+    // Here, we are sending the subdocument array of Player objects once we find the Team
+    return res.send(team.players);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
+  }
+});
+
+// POST new player to team by :teamId
+router.post("/:teamId/players", async (req, res) => {
+  try {
+    // get Team document that player will be added to and validate
+    let team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(400).send(`Team not found!: ${error}`);
+
+    // Create new Player object from body of request
+    let playerToAdd = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      rating: req.body.rating,
+    };
+
+    // Create new Player model, validate request body
+    let newPlayer = new Player(playerToAdd);
+    let { error } = newPlayer.playerValidate(playerToAdd);
+    if (error) return res.status(400).send(`Body not valid: ${error}`);
+
+    // Add new Player to Team players subdocument
+    team.players.push(newPlayer);
+    await team.save();
+
+    // Send the Team object with the updated subdocument
+    return res.status(200).send(team);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
+  }
+});
+
+// GET player by :playerId from team by :teamId
+router.get("/:teamId/players/:playerId", async (req, res) => {
+  try {
+    let team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(400).send(`Team not found!: ${error}`);
+
+    // Using the special "id" subdocument method to find a specific player by _id
+    let player = team.players.id(req.params.playerId);
+    if (!player) return res.status(400).send(`Player not found!`);
+    return res.send(player);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
+  }
+});
+
+// PUT player by :playerId from team by :teamId
+router.put("/:teamId/players/:playerId", async (req, res) => {
+  try {
+    let team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(400).send(`Team not found!: ${error}`);
+
+    let player = team.players.id(req.params.playerId);
+    if (!player) return res.status(400).send(`Player not found!`);
+
+    // Validate the body of the request coming in
+    let { error } = player.playerValidate(req.body);
+    if (error) return res.status(400).send(`Body not valid: ${error}`);
+
+    // Update any properties of the player subdocument coming in the body of the request, then save the team document
+    player.set(req.body);
+    await team.save();
+
+    return res.send(team);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
+  }
+});
+
+// DELETE player by :playerId from team by :teamId
+router.delete("/:teamId/players/:playerId", async (req, res) => {
+  try {
+    let team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(400).send(`Team not found!: ${error}`);
+
+    // Using the special "id" subdocument method to find a specific player by _id
+    let player = team.players.id(req.params.playerId).remove();
+    if (!player) return res.status(400).send(`Player not found!`);
+
+    await team.save();
+    return res.send(player);
+  } catch (error) {
+    return res.status(500).send(`Internal Server Error: ${error}`);
+  }
+});
 
 module.exports = router;
