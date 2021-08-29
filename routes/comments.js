@@ -42,19 +42,27 @@ router.post("/", async (req, res) => {
   }
 });
 
-//TODO: Add post reply by commentId and test
+// Add post reply by commentId and test
+// TESTED SUCCESS
 router.post("/:commentId/reply", async (req, res) => {
   try {
     let data = {
-      commentId: req.params.commentId,
       text: req.body.text,
     };
+
+    let comment = await Comment.findById(req.params.commentId);
+    if (!comment)
+      return res
+        .status(400)
+        .send(`Comment with ID ${req.params.commentId} does not exist!`);
 
     let newReply = new Reply(data);
     let { error } = newReply.replyValidate(req.body);
     if (error) return res.status(400).send(`Body not valid: ${error}`);
-    await newReply.save();
-    return res.send(newComment);
+
+    comment.replies.push(newReply);
+    await comment.save();
+    return res.send(comment);
   } catch (error) {
     return res.status(500).send(`Internal Server Error: ${error}`);
   }

@@ -14,8 +14,8 @@ commentSchema.methods.commentValidate = (comment) => {
   const schema = Joi.object({
     videoId: Joi.string().min(1).max(50).required(),
     text: Joi.string().min(1).max(5000).required(),
-    like: Joi.number().required(),
-    dislike: Joi.number().required(),
+    like: Joi.number().optional(),
+    dislike: Joi.number().optional(),
     replies: Joi.array().optional(),
   });
 
