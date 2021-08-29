@@ -16,7 +16,7 @@ commentSchema.methods.commentValidate = (comment) => {
     text: Joi.string().min(1).max(5000).required(),
     like: Joi.number().required(),
     dislike: Joi.number().required(),
-    replies: Joi.array().required(),
+    replies: Joi.array().optional(),
   });
 
   return schema.validate(comment);

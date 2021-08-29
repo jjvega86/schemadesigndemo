@@ -6,6 +6,7 @@ require("dotenv").config();
 
 //* Route imports
 const teams = require("./routes/teams");
+const comments = require("./routes/comments");
 
 //* Creating an instance of the Express app
 const app = express();
@@ -17,6 +18,7 @@ connectDb();
 app.use(cors());
 app.use(express.json());
 app.use("/api/teams", teams);
+app.use("/api/comments", comments);
 
 //* Defining the PORT our server will run on using an environmental variable or default value
 const port = process.env.PORT || 5000;
