@@ -5,6 +5,19 @@ const { Reply } = require("../models/reply");
 
 //* All Comments endpoints
 
+// GET all videoIds for saved comments
+// Using "distinct" Mongoose to grab only the unique instances of a videoId
+// These will be sent in the response as an array of strings
+router.get("/videoIds", async (req, res) => {
+  try {
+    let videoIds = await Comment.distinct("videoId");
+    console.log(videoIds);
+    if (!videoIds) return res.status(400).send(`No videoIds available!`);
+    return res.send(videoIds);
+  } catch (error) {
+    console.log(error);
+  }
+});
 // get all comments by videoId
 // TESTED SUCCESS
 router.get("/:videoId", async (req, res) => {
