@@ -81,4 +81,28 @@ router.post("/:commentId/reply", async (req, res) => {
   }
 });
 
+// PATCH like on a comment
+router.patch("/:commentId/like", async (req, res) => {
+  try {
+    let commentToLike = await Comment.findById(req.params.commentId);
+    commentToLike.like++;
+    commentToLike.save();
+    return res.status(200).send(commentToLike);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+// PATCH dislike on a comment
+router.patch("/:commentId/dislike", async (req, res) => {
+  try {
+    let commentToDislike = await Comment.findById(req.params.commentId);
+    commentToDislike.dislike++;
+    commentToDislike.save();
+    return res.status(200).send(commentToDislike);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 module.exports = router;
