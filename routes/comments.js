@@ -81,6 +81,20 @@ router.post("/:commentId/reply", async (req, res) => {
   }
 });
 
+// GET all replies by commentId
+router.get("/:commentId/replies", async (req, res) => {
+  try {
+    let comment = await Comment.findById(req.params.commentId);
+    if (!comment)
+      res
+        .status(404)
+        .send(`Comment with id ${req.params.commentId} does not exist!`);
+    return res.send(comment.replies);
+  } catch (error) {
+    console.error(error.message);
+  }
+});
+
 // PATCH like on a comment
 router.patch("/:commentId/like", async (req, res) => {
   try {
